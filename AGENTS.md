@@ -1,21 +1,23 @@
 # Speedrun: instructions for AI agents
 
-You are an AI coding agent (Claude Code, Codex or another) and a person has asked you to set up or change Speedrun. Speedrun reads the session logs of AI coding tools on this computer, has an AI write each day up, and shows what got done next to an honest "before AI" estimate on a local page. `README.md` describes it for people.
+You are an AI coding agent (Claude Code, Codex or another) and a person has asked you to set up or change Speedrun. Speedrun reads the session logs of AI tools on this computer (Claude Code, Codex, Claude Cowork), has an AI write each day up, and shows what got done next to an honest "before AI" estimate on a local page. `README.md` describes it for people.
 
 ## Setting it up for someone
 
 Do these in order. Speak plainly; many users don't code.
+
+**First, check you are on the person's own computer.** Speedrun has to run where the session logs are and where the person's browser is. If you are working in a sandbox or a cloud session (Claude Cowork, a cloud coding session, a container that can't see the person's real home folder), don't install it there: it would find no logs and the page would not open in their browser. Stop and tell them: "Speedrun has to run on your computer itself. Open this folder in the Code tab of the Claude desktop app, or in a coding agent in a terminal, and ask again."
 
 1. **Check Node.** `node --version` must be 20 or newer (22 or newer to read Codex's compressed older logs). If it is missing or older, tell the person how to install it and stop.
 2. **Run the self-check.** `npm test` must end with "All passed." It uses a pretend home folder and a stand-in AI; it never reads the person's logs. If it fails, fix nothing silently: show the failing lines.
 3. **Show the demo** (optional but kind): `npm run demo`, then open http://127.0.0.1:8798/. Say that the data is made up. Stop it before the next step.
 4. **Ask the person four things**, one short message:
    - What do you do, and what can you already do yourself without AI? (Two or three sentences. This becomes `about`.)
-   - Which AI should write the daily write-ups? Default: the tool they are talking to you in, if it has a command-line form. See "Pick the AI that writes it up" in `README.md`.
+   - Which AI should write the daily write-ups? Default: the tool they are talking to you in, if it has a command-line form. See "Pick the AI that writes it up" in `README.md`. Before choosing `claude`, check that `claude --version` works: the Claude desktop app alone doesn't add that command.
    - Any names that must never appear on the page (clients, employers, people, project code names)?
    - How far back to start? Default: 90 days.
 5. **Write the settings.** Copy `speedrun.config.example.json` to `speedrun.config.json` and fill it in. Write their private words to `private-terms.txt` (format in `private-terms.example.txt`). Both files are git-ignored; never commit them.
-6. **Check what will be read.** Look for `~/.claude/projects` and `~/.codex/sessions`. If the person's main tool is neither, see "Adding a tool" below before going on.
+6. **Check what will be read.** Look for `~/.claude/projects` (Claude Code), `~/.codex/sessions` (Codex) and `local-agent-mode-sessions` in the Claude desktop app's data folder (Claude Cowork; the paths are in `README.md`). If the person's main tool is none of these, see "Adding a tool" below before going on.
 7. **Try one day before a full run.** Run `node src/collect.mjs`, then pick a recent day with sessions and run `node src/summarize.mjs YYYY-MM-DD && node src/build.mjs`. If the AI setting is wrong, this fails fast with a plain message. Read the result in `data/days/YYYY-MM-DD.json` and sanity-check it against what the person did that day.
 8. **Start it.** `npm start`, open http://127.0.0.1:8799/, and tell the person: the first update takes a few minutes, newest days first, and each day's write-up is one AI request.
 9. **Offer to keep it running.** Only if they want it: a login item, a launchd or systemd user service, or a scheduled task that runs `npm start` in this folder. Ask first; don't install background jobs on your own.
@@ -41,7 +43,7 @@ Do these in order. Speak plainly; many users don't code.
 
 ## Adding a tool
 
-If the person's AI tool isn't `claude-code` or `codex`, find where it keeps its session logs on disk and write a reader: `src/sources/README.md` has the contract and a checklist. Add made-up fixture logs for it to `test/test.mjs`, never real ones.
+If the person's AI tool isn't `claude-code`, `codex` or `cowork`, find where it keeps its session logs on disk and write a reader: `src/sources/README.md` has the contract and a checklist. Add made-up fixture logs for it to `test/test.mjs`, never real ones.
 
 ## After any change
 

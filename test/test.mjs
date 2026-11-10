@@ -64,6 +64,33 @@ put(path.join(home, '.codex', 'sessions', String(dayStart.getFullYear()), pad(da
 ]));
 put(path.join(home, '.codex', 'session_index.jsonl'), lines([{ id: X_ID, thread_name: 'Unit converter' }]));
 
+// Claude Cowork keeps its sessions in the desktop app's data folder. The next day: one session with
+// a helper agent, one started by a scheduled task, and look-alike files that are not transcripts.
+const W_ID = 'dddddddd-4444-4444-8444-444444444444', W2_ID = 'eeeeeeee-5555-4555-8555-555555555555';
+const at2 = (min) => at(24 * 60 + min);
+const next = new Date(t0 + 24 * 60 * 60_000);
+const DAY2 = `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
+const coworkStore = path.join(home, 'Library', 'Application Support', 'Claude', 'local-agent-mode-sessions');
+const coworkSpace = path.join(coworkStore, 'account-0000', 'workspace-0000');
+const coworkLog = path.join(coworkSpace, 'local_one', '.claude', 'projects', '-sessions-quiet-fern');
+put(path.join(coworkSpace, 'local_one.json'), JSON.stringify({ sessionId: 'local_one', cliSessionId: W_ID, sessionType: 'cowork', title: 'Spring plant order', cwd: '/sessions/quiet-fern', userSelectedFolders: ['/home/sample/work/orders'] }));
+put(path.join(coworkLog, `${W_ID}.jsonl`), lines([
+  { type: 'user', timestamp: at2(0), cwd: '/sessions/quiet-fern', message: { role: 'user', content: 'Turn the supplier price lists into one order sheet' } },
+  { type: 'assistant', timestamp: at2(1), message: { id: 'msg_w1', role: 'assistant', usage: usage(400), content: [{ type: 'text', text: 'Reading the price lists.' }, { type: 'tool_use', name: 'Write', input: { file_path: '/sessions/quiet-fern/mnt/orders/order-sheet.csv' } }] } },
+  { type: 'assistant', timestamp: at2(9), message: { id: 'msg_w2', role: 'assistant', usage: usage(100), content: [{ type: 'text', text: 'Done: the order sheet lists every plant with its cheapest supplier.' }] } },
+]));
+put(path.join(coworkLog, W_ID, 'subagents', 'agent-1.jsonl'), lines([
+  { type: 'assistant', timestamp: at2(3), isSidechain: true, message: { id: 'msg_w3', role: 'assistant', usage: usage(50), content: [{ type: 'text', text: 'Helper: compared two price lists.' }] } },
+]));
+put(path.join(coworkSpace, 'local_two.json'), JSON.stringify({ sessionId: 'local_two', cliSessionId: W2_ID, sessionType: 'scheduled', title: 'Weekly stock check' }));
+put(path.join(coworkSpace, 'local_two', '.claude', 'projects', '-sessions-calm-moss', `${W2_ID}.jsonl`), lines([
+  { type: 'user', timestamp: at2(30), cwd: '/sessions/calm-moss', message: { role: 'user', content: 'Check which plants are low on stock' } },
+  { type: 'assistant', timestamp: at2(34), message: { id: 'msg_w4', role: 'assistant', usage: usage(20), content: [{ type: 'text', text: 'Three plants are low.' }] } },
+]));
+const stray = lines([{ type: 'user', timestamp: at2(40), message: { role: 'user', content: 'Not a session' } }]);
+put(path.join(coworkSpace, 'local_one', 'outputs', 'export.jsonl'), stray);
+put(path.join(coworkStore, 'skills-plugin', 'workspace-0000', 'notes.jsonl'), stray);
+
 // A repository with one commit of "ours" and one by someone else, plus a dated note file.
 let hasGit = true;
 try {
@@ -122,6 +149,11 @@ check(c?.prompts.filter((p) => !p.kind).length === 2 && c?.prompts.filter((p) =>
 check(c?.outcomes.some((o) => o.text.includes('landing page is built')) && c?.actions.some((a) => a.text === 'Wrote index.html'), 'agent reports and key actions are kept');
 check(x?.title === 'Unit converter' && x?.actions.some((a) => a.text.startsWith('Ran: git push')) && x?.outcomes.length === 1, 'Codex title, report and deploy step are read');
 check(f.tokens['claude-code'] === (1000 + 500 + 200 + 100 + 300 + 50) * 6 && f.tokens.codex === 5000, 'tokens add up, helper agents and automated calls included', JSON.stringify(f.tokens));
+const f2 = readJson(path.join(data, 'facts', `${DAY2}.json`));
+const w = f2.sessions.find((s) => s.sid === 'W-dddddddd'), w2 = f2.sessions.find((s) => s.sid === 'W-eeeeeeee');
+check(f2.sessions.length === 2 && w?.tool === 'Claude Cowork' && w?.title === 'Spring plant order' && w?.folder === 'work/orders', 'a Claude Cowork session is read, with its title and the folder you chose', f2.sessions.map((s) => `${s.sid} ${s.title} ${s.folder}`).join(', '));
+check(w?.activeMinutes === 9 && w?.actions.some((a) => a.text === 'Wrote order-sheet.csv') && w?.outcomes.length === 1 && f2.tokens.cowork === (400 + 100 + 50 + 20) * 6, 'Cowork time, reports, key actions and tokens are read, helper agents included', `${w?.activeMinutes} min, ${f2.tokens.cowork} tokens`);
+check(w2?.auto === true && f2.activeMinutes === 9, 'a Cowork session started by a scheduled task is not counted as your time', `${f2.activeMinutes} min, auto ${w2?.auto}`);
 if (hasGit) {
   check(f.commits.length === 1 && f.commits[0].subject === 'Add the landing page', 'only your own commits count, not other people\'s', f.commits.map((k) => k.subject).join(' | '));
   check(f.notes.length === 1 && f.notes[0].head === 'Shipped the landing page', 'dated project notes are read');
@@ -151,7 +183,7 @@ check(site?.mult === 100 && site?.actualMin === 12, 'a runaway estimate is cappe
 check(app?.mult === 3 && app?.routine === true, 'routine work is capped at 3x', `${app?.mult}x`);
 check(pd?.actualMin === 17 && pd?.handsMin > 0 && pd?.handsMin <= pd?.actualMin, 'agent time and your time are both there', `${pd?.actualMin} / ${pd?.handsMin} min`);
 check(page.start === DAY && page.days[page.days.length - 1].day === DAY, 'the page starts at the first day with work');
-check(page.categories.websites === 'Websites' && page.categories.other === 'Other' && page.tools.join() === 'Claude Code,Codex', 'categories and tools come from the settings');
+check(page.categories.websites === 'Websites' && page.categories.other === 'Other' && page.tools.join() === 'Claude Code,Codex,Claude Cowork', 'categories and tools come from the settings');
 
 // Your time at the keyboard: reading a quick reply counts, an agent working alone for an hour doesn't.
 {

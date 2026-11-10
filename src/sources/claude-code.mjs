@@ -51,10 +51,11 @@ function action(b, t, r) {
   }
 }
 
-async function parse(file) {
-  const rel = path.relative(root(), file).split(path.sep);
+/** Reads one transcript. `base` is the projects folder it sits in. Claude Cowork keeps the same format (see cowork.mjs). */
+export async function parseTranscript(file, base, kind) {
+  const rel = path.relative(base, file).split(path.sep);
   const sub = rel.length > 2; // <project>/<session>/subagents/agent.jsonl
-  const r = newRecord('claude-code');
+  const r = newRecord(kind);
   r.session = sub ? rel[1] : path.basename(file, '.jsonl');
   r.sub = sub;
   const seen = new Set();
@@ -101,5 +102,5 @@ export default {
   prefix: 'C',
   where: '~/.claude/projects',
   files: () => walk(root(), (n) => n.endsWith('.jsonl')),
-  parse,
+  parse: (file) => parseTranscript(file, root(), 'claude-code'),
 };

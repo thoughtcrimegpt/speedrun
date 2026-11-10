@@ -41,12 +41,12 @@ export async function eachLine(file, fn, want = null) {
   }
 }
 
-export async function walk(dir, test, out = [], depth = 0) {
+export async function walk(dir, test, out = [], depth = 0, max = 6) {
   let ents;
   try { ents = await fsp.readdir(dir, { withFileTypes: true }); } catch { return out; }
   for (const e of ents) {
     const p = path.join(dir, e.name);
-    if (e.isDirectory()) { if (depth < 6) await walk(p, test, out, depth + 1); } else if (test(e.name)) out.push(p);
+    if (e.isDirectory()) { if (depth < max) await walk(p, test, out, depth + 1, max); } else if (test(e.name)) out.push(p);
   }
   return out;
 }

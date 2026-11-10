@@ -1,6 +1,6 @@
 # Readers
 
-One file per AI coding tool. A reader turns that tool's session logs into the same small record, so the rest of Speedrun doesn't care which tool did the work.
+One file per AI tool. A reader turns that tool's session logs into the same small record, so the rest of Speedrun doesn't care which tool did the work.
 
 ## The contract
 
@@ -35,6 +35,8 @@ export default {
 | `tokens`, `fresh` | Tokens per day (`{ 'YYYY-MM-DD': n }`): all tokens, and tokens without re-read cached context. |
 
 Then add the reader to the list in `index.mjs`.
+
+A tool that keeps Claude Code's transcript format in its own place doesn't need a new parser: find its files and call `parseTranscript` from `claude-code.mjs`, as `cowork.mjs` does.
 
 ## Checklist
 

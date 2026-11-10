@@ -3,7 +3,8 @@
 
 import claudeCode from './claude-code.mjs';
 import codex from './codex.mjs';
+import cowork from './cowork.mjs';
 
-export const SOURCES = [claudeCode, codex];
+export const SOURCES = [claudeCode, codex, cowork];
 
 export const sourceById = (id) => SOURCES.find((s) => s.id === id);

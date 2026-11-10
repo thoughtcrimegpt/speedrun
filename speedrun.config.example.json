@@ -1,7 +1,7 @@
 {
   "about": "I run a small bakery. I do my own bookkeeping, ordering and customer emails, but I don't code or design.",
   "start": "",
-  "sources": ["claude-code", "codex"],
+  "sources": ["claude-code", "codex", "cowork"],
   "ai": { "provider": "claude", "model": "opus" },
   "categories": {
     "websites": "Websites",

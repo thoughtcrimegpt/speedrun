@@ -1,7 +1,7 @@
 {
   "name": "speedrun",
   "version": "0.1.0",
-  "description": "See what you got done with your AI coding agents each day, next to an honest estimate of how long it would have taken before AI. Local only.",
+  "description": "See what you got done with your AI agents each day, next to an honest estimate of how long it would have taken before AI. Local only.",
   "private": true,
   "type": "module",
   "license": "MIT",

@@ -23,7 +23,7 @@ const DEFAULTS = {
   // First day to read, as YYYY-MM-DD. Empty: 90 days before the first run.
   start: '',
   // Which session logs to read. See src/sources/.
-  sources: ['claude-code', 'codex'],
+  sources: ['claude-code', 'codex', 'cowork'],
   // Which AI writes each day up. See README, "Pick the AI that writes it up".
   ai: { provider: 'claude', model: 'opus' },
   // Project categories: id -> label on the page. "other" always exists.
