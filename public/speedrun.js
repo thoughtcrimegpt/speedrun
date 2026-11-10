@@ -281,7 +281,7 @@ function split(p) {
 function dayView() {
   const i = data.days.findIndex((d) => d.day === selDay);
   const d = data.days[i];
-  if (!d) return hero() + '<div class="empty-state">No days yet.</div>';
+  if (!d) return `<div class="empty-state"><p>No AI sessions were found on this computer yet.</p><p>Speedrun reads the logs of ${esc((data.tools || []).join(' and ') || 'your AI coding tools')}. Work with one of them, then press Update.</p></div>`;
   const newer = data.days[i - 1], older = data.days[i + 1];
   const tracked = d.projects.filter((p) => p.actualMin != null);
   const mult = d.actualMin ? d.oldMin / Math.max(d.actualMin, 10) : null;
