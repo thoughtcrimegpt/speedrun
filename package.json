@@ -1,0 +1,15 @@
+{
+  "name": "speedrun",
+  "version": "0.1.0",
+  "description": "See what you got done with your AI coding agents each day, next to an honest estimate of how long it would have taken before AI. Local only.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "demo": "node src/demo.mjs",
+    "refresh": "node src/refresh.mjs",
+    "test": "node test/test.mjs"
+  }
+}

@@ -1,0 +1,33 @@
+name: Self-check
+
+# Runs Speedrun's self-check on fresh Mac, Windows and Linux machines, with made-up logs and a
+# stand-in AI. No secrets, no real data.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}, Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22]
+        include:
+          - os: ubuntu-latest
+            node: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+      - run: node src/demo.mjs --build-only

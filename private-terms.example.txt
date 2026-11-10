@@ -1,0 +1,9 @@
+# Words that must never show on the Speedrun page. Copy this file to private-terms.txt (git ignores it).
+# One per line. Whole words, upper or lower case. Lines starting with # are comments.
+#
+# A word on its own is replaced with "(private)":
+#   Quince
+#
+# "term => replacement" swaps in something neutral, and the AI is told to always use it:
+#   Zebulon Quince => a client
+#   Project Nightjar => the new product

@@ -1,0 +1,9 @@
+# Your own settings, private words and everything Speedrun reads or writes about you stay local.
+speedrun.config.json
+private-terms.txt
+data/
+demo-data/
+node_modules/
+.DS_Store
+.env*
+*.log

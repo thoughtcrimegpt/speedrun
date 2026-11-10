@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Speedrun</title>
+  <link rel="icon" href="icon.svg">
+  <link rel="stylesheet" href="speedrun.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <div class="title-row">
+        <h1>Speedrun</h1>
+        <button type="button" class="btn ghost small" id="refresh" title="Read the latest sessions now">Update</button>
+      </div>
+      <p class="summary" id="summary">Loading…</p>
+      <p class="demo" id="demo" hidden>Sample data. These days and projects are made up to show what the page looks like. Run <strong>npm start</strong> to see your own.</p>
+      <nav class="seg" id="views" aria-label="Views">
+        <a href="#day" data-view="day">Day</a>
+        <a href="#week" data-view="week">Week</a>
+        <a href="#projects" data-view="projects">Projects</a>
+        <a href="#best" data-view="best">Best splits</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap sr" id="main" aria-live="polite"></main>
+  <footer class="wrap foot" id="foot">
+    Two <strong>estimates</strong>, both on the low side and counted in work time (8-hour days, 40-hour weeks). <strong>Pro:</strong> one skilled professional or a small hired team; routine work capped at 3×. <strong>You, before AI:</strong> how long you alone would have needed, learning included, or "hire out" with a rough market cost where learning isn't realistic. <strong>Agent time</strong> is how long the agents were actively working, from session timestamps, with side-by-side chats counted once (a project's own bar shows its own chats, so projects that ran side by side add up to more than the day). <strong>Your time</strong> is estimated from when you sent messages: the reading and typing before each one, overlapping chats counted once; agents working alone don't count. Everything stays on this computer.
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="speedrun.js"></script>
+</body>
+</html>
