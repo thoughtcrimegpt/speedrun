@@ -104,6 +104,30 @@ try {
   git(['add', '.']); git(['-c', 'user.email=someone@example.com', '-c', 'user.name=Someone', 'commit', '-q', '-m', 'Work by someone else']);
 } catch { hasGit = false; }
 
+// A booby-trapped repository: its own settings name a "signature checker" program and it holds a
+// signed-looking commit, so a plain `git log` there would start that program. Reading it must not.
+const trapMark = path.join(tmp, 'trap-ran');
+let hasTrap = false;
+if (hasGit && process.platform !== 'win32') {
+  try {
+    const trap = path.join(path.dirname(repo), 'downloaded-thing');
+    fs.mkdirSync(trap, { recursive: true });
+    const tg = (args, input) => execFileSync('git', ['-C', trap, ...args], { input, stdio: ['pipe', 'pipe', 'pipe'] }).toString().trim();
+    tg(['init', '-q']);
+    tg(['config', 'user.email', 'me@example.com']);
+    const tree = tg(['write-tree']);
+    const stamp = Math.floor((t0 - 86_400_000) / 1000); // a day with no sessions, so it never counts as work
+    const commit = tg(['hash-object', '-t', 'commit', '-w', '--stdin'], `tree ${tree}\nauthor Me <me@example.com> ${stamp} +0000\ncommitter Me <me@example.com> ${stamp} +0000\ngpgsig -----BEGIN PGP SIGNATURE-----\n \n x\n -----END PGP SIGNATURE-----\n\nTrap commit\n`);
+    tg(['update-ref', 'HEAD', commit]);
+    const evil = path.join(tmp, 'evil.sh');
+    put(evil, `#!/bin/sh\ntouch "${trapMark}"\n`);
+    fs.chmodSync(evil, 0o755);
+    tg(['config', 'log.showSignature', 'true']);
+    tg(['config', 'gpg.program', evil]);
+    hasTrap = true;
+  } catch { /* git too old to build the trap: check skipped */ }
+}
+
 put(process.env.SPEEDRUN_CONFIG, JSON.stringify({
   about: 'I run a small garden shop and do not code.',
   ai: { provider: 'command', command: [process.execPath, path.join(ROOT, 'test', 'fake-ai.mjs')] },
@@ -158,6 +182,8 @@ if (hasGit) {
   check(f.commits.length === 1 && f.commits[0].subject === 'Add the landing page', 'only your own commits count, not other people\'s', f.commits.map((k) => k.subject).join(' | '));
   check(f.notes.length === 1 && f.notes[0].head === 'Shipped the landing page', 'dated project notes are read');
 } else console.log('SKIP  git is not installed here: commit and note checks skipped');
+if (hasTrap) check(!fs.existsSync(trapMark), 'a repository\'s own settings can\'t make Speedrun start a program');
+else console.log('SKIP  booby-trapped repository check (Windows or no git)');
 const text = dossier(f, []);
 check(/User asked: Build a landing page/.test(text) && /KEY ACTIONS/.test(text) && /Automatic check-in, not the user/.test(text), 'the day\'s evidence reaches the AI in full');
 check(systemPrompt().includes('I run a small garden shop') && systemPrompt().includes('"Zebulon Quince" is always written as "a client"') && !/\bundefined\b/.test(systemPrompt()), 'the instructions carry your "about" text and renamed words');

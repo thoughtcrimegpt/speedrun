@@ -59,6 +59,12 @@ function sh(cmd, args, opts = {}) {
   return new Promise((resolve) => execFile(cmd, args, { maxBuffer: 32 << 20, timeout: 30_000, windowsHide: true, ...opts }, (err, out) => resolve(err ? '' : out)));
 }
 
+// A repository's own settings can name programs for git to run (for example a signature checker
+// while reading the history). Speedrun only reads commit subjects, so it switches those off: a
+// folder someone else made can't get a program started on your computer through Speedrun.
+const SAFE_GIT = ['-c', 'log.showSignature=false', '-c', 'core.fsmonitor=false', '-c', 'core.pager=cat', '-c', 'gpg.program=', '-c', 'gpg.ssh.program=', '-c', 'gpg.x509.program='];
+const git = (args, opts) => sh('git', [...SAFE_GIT, ...args], opts);
+
 /** Repositories under the folders in "roots", plus the ones your sessions ran in (or just above). */
 async function gitRepos(cwds) {
   const repos = new Set();
@@ -75,7 +81,7 @@ async function gitRepos(cwds) {
   for (const r of config.roots) await find(r, 0);
   for (const cwd of cwds) {
     if (!fs.existsSync(cwd)) continue;
-    const top = (await sh('git', ['-C', cwd, 'rev-parse', '--show-toplevel'], { timeout: 10_000 })).trim();
+    const top = (await git(['-C', cwd, 'rev-parse', '--show-toplevel'], { timeout: 10_000 })).trim();
     if (top) repos.add(path.resolve(top));
     // A session started in a folder of projects works in the repositories below it.
     else if (path.resolve(cwd) !== HOME) await find(cwd, 0);
@@ -88,10 +94,10 @@ async function commits(repos, start, startMs) {
   const out = [];
   const seen = new Set();
   for (const repo of repos) {
-    const email = (await sh('git', ['-C', repo, 'config', 'user.email'], { timeout: 10_000 })).trim();
-    const args = ['-C', repo, 'log', '--all', '--no-merges', `--since=${start}T00:00:00`, '--format=%H%x09%at%x09%s'];
+    const email = (await git(['-C', repo, 'config', 'user.email'], { timeout: 10_000 })).trim();
+    const args = ['-C', repo, 'log', '--all', '--no-merges', '--no-show-signature', `--since=${start}T00:00:00`, '--format=%H%x09%at%x09%s'];
     if (email) args.push(`--author=${email}`);
-    const log = await sh('git', args, { timeout: 15_000 });
+    const log = await git(args, { timeout: 15_000 });
     for (const line of log.split('\n')) {
       const [h, at, s] = line.split('\t');
       if (!h || seen.has(h)) continue;

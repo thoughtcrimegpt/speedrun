@@ -58,7 +58,10 @@ export function start({ port = config.port, auto = !process.env.SPEEDRUN_NO_AUTO
       const url = new URL(req.url, 'http://127.0.0.1');
 
       if (url.pathname === '/api/speedrun' && req.method === 'GET') {
-        if (auto) kick();
+        // Other websites can't read this page's data, but they could still make the browser ask for it.
+        // Only the page itself starts an update, so no other site can make Speedrun call your AI.
+        const site = req.headers['sec-fetch-site'];
+        if (auto && (!site || site === 'same-origin' || site === 'none')) kick();
         const raw = await fsp.readFile(path.join(DATA, 'speedrun.json'), 'utf8').catch(() => null);
         return sendJson(res, 200, { ok: true, demo: DEMO, status: status(), data: raw ? JSON.parse(raw) : null });
       }
